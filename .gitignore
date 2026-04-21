@@ -1,0 +1,30 @@
+# 虚拟环境 (绝对禁止上传)
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# PyInstaller 打包产物 (绝对禁止上传，exe 应放在 Releases)
+build/
+dist/
+*.spec
+
+# Python 缓存垃圾
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# IDE 配置文件 (保护个人开发隐私)
+.idea/
+.vscode/
+
+# 操作系统自动生成的隐藏文件
+.DS_Store
+Thumbs.db
+
+# 雀码测试时生成的本地测试文件 (避免污染源码库)
+QueMa_Export.txt
+QueMa_Export.docx
+QueMa_Demo_Project/
