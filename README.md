@@ -51,5 +51,9 @@ python src/main.py
 
 Bash
 python build.py
-🤝 贡献与反馈
-如果您在使用中遇到了 Bug，或有新的功能想法，欢迎随时提交 Issue 或 Pull Request！祝您代码无 Bug，一路绿灯！
+## 🤝 贡献与反馈
+如果您在使用中遇到了 Bug，或有新的功能想法，欢迎随时通过以下方式联系我：
+- **提交 Issue**：[点击这里提交 Bug 或建议](https://github.com/hollowmanxpy/QueMa_Toolbox/issues)
+- **开发者邮箱**：227598042@qq.com
+
+祝您代码无 Bug，一路绿灯！

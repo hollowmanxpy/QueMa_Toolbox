@@ -106,6 +106,7 @@ class QueMaToolboxApp:
         about_text = (
             "如果您在使用中遇到了 Bug，或者有界面建议、新功能想法，\n"
             "欢迎随时与我们取得联系。您的建议是雀码进步的唯一动力。\n\n"
+            "✉️ 开发者邮箱：227598042@qq.com\n\n"
             "祝您代码无 Bug，一路绿灯！"
         )
         tk.Label(dlg, text=about_text, font=("Microsoft YaHei", 10), bg=colors["panel"],
