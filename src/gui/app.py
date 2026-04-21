@@ -112,11 +112,6 @@ class QueMaToolboxApp:
         tk.Label(dlg, text=about_text, font=("Microsoft YaHei", 10), bg=colors["panel"],
                  fg=colors["text"], justify="center").pack(pady=5)
 
-        btn_ok = tk.Button(dlg, text="确 定", font=("Microsoft YaHei", 10, "bold"),
-                           fg="white", bg=colors["accent"], width=12, cursor="hand2", relief="flat",
-                           command=dlg.destroy)
-        btn_ok.pack(pady=25)
-
     def update_status(self, msg, percent=None):
         self.status_var.set(msg)
         if percent is not None:
