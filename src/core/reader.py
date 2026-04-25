@@ -46,3 +46,37 @@ def scan_and_read(target_dir: str, allowed_extensions: tuple = None) -> list:
                 })
 
     return extracted_data
+
+
+def generate_ascii_tree(target_dir: str, ignore_dirs: set = None) -> str:
+    """
+    高性能生成 ASCII 目录树。
+    使用 os.scandir 代替 os.listdir 以提升 IO 性能。
+    """
+    if ignore_dirs is None:
+        ignore_dirs = {'.git', '.svn', '.idea', '__pycache__', 'venv', '.venv', 'node_modules', 'dist', 'build'}
+
+    # 根节点名称
+    tree_lines = [f"📁 {os.path.basename(os.path.abspath(target_dir))}"]
+
+    def _build_tree(current_dir, prefix=""):
+        try:
+            with os.scandir(current_dir) as it:
+                # 过滤黑名单，并将文件夹排在文件前面
+                entries = [entry for entry in it if entry.name not in ignore_dirs]
+                entries.sort(key=lambda e: (not e.is_dir(), e.name.lower()))
+
+                count = len(entries)
+                for i, entry in enumerate(entries):
+                    is_last = (i == count - 1)
+                    connector = "└── " if is_last else "├── "
+                    tree_lines.append(f"{prefix}{connector}{entry.name}")
+
+                    if entry.is_dir():
+                        extension = "    " if is_last else "│   "
+                        _build_tree(entry.path, prefix + extension)
+        except PermissionError:
+            tree_lines.append(f"{prefix}└── [拒绝访问]")
+
+    _build_tree(target_dir)
+    return "\n".join(tree_lines)

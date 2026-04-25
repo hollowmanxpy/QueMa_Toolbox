@@ -58,60 +58,11 @@ class SourceExtractorTab(BaseTab):
         self.current_theme_colors = colors
         self.on_format_change()
 
-    def _create_perfect_entry(self, parent, str_var, width=10):
-        # 外层 Frame：负责充当 1px 的框线，明确绑定为 border 颜色
-        bf = tk.Frame(parent, padx=1, pady=1)
-        self.dynamic_widgets.append((bf, "bg", "border"))
-
-        # 内层 Entry：绑定为 panel 颜色
-        e = tk.Entry(bf, textvariable=str_var, font=("Microsoft YaHei", 10), relief="flat", bd=0, width=width)
-        e.pack(fill="both", expand=True, ipady=4, ipadx=6)
-        self.dynamic_widgets.append((e, "bg", "panel"))
-        self.dynamic_widgets.append((e, "fg", "text"))
-
-        # noinspection PyTypeChecker
-        e.config(insertbackground=str(self.color_map["标准黑"]["hex"]))
-        return bf, e
-
-    def _create_perfect_button(self, parent, text, cmd):
-        # 同样，明确绑定为 border 颜色
-        bf = tk.Frame(parent, padx=1, pady=1)
-        self.dynamic_widgets.append((bf, "bg", "border"))
-        btn = tk.Button(bf, text=text, font=("Microsoft YaHei", 9), relief="flat", cursor="hand2", command=cmd)
-        btn.pack(fill="both", expand=True, ipadx=10, ipady=2)
-        self.dynamic_widgets.append((btn, "bg", "bg"))
-        self.dynamic_widgets.append((btn, "fg", "text"))
-        return bf
-
     @staticmethod
     def _select_dir(var):
         p = filedialog.askdirectory()
         if p:
             var.set(p)
-
-    def _register_widgets_recursive(self, container):
-        """【终极修复】提取已注册组件列表。只给漏网的组件刷色，绝不破坏原有的边框色！"""
-        registered = [item[0] for item in self.dynamic_widgets]
-
-        for child in container.winfo_children():
-            # 只有没有被手动注册过的组件，才会被系统强制刷成 panel 白底
-            if child not in registered:
-                # 把 tk.Frame 加回来！这样大面积的灰底容器就能变白了！
-                if isinstance(child, (tk.Label, tk.Frame, tk.Checkbutton)):
-                    self.dynamic_widgets.append((child, "bg", "panel"))
-
-                    if isinstance(child, tk.Checkbutton):
-                        # noinspection SpellCheckingInspection
-                        self.dynamic_widgets.append((child, "activebackground", "panel"))
-                        # noinspection SpellCheckingInspection
-                        self.dynamic_widgets.append((child, "selectcolor", "panel"))
-
-                    if isinstance(child, tk.Label) and child.cget("fg") != "gray":
-                        self.dynamic_widgets.append((child, "fg", "text"))
-
-            # 继续向下挖掘
-            if child.winfo_children():
-                self._register_widgets_recursive(child)
 
     def setup_ui(self):
         main_f = tk.Frame(self.parent)
@@ -244,7 +195,6 @@ class SourceExtractorTab(BaseTab):
         self.word_only_widgets = [cb_tf, sp_ts, cb_tc, cb_bf, sp_bs, cb_bc, self.chk_hf]
         self.style_labels = [l_tf, l_ts, l_tc, l_bf, l_bs, l_bc, self.chk_hf]
 
-        # 启动终极递归洗地！
         self._register_widgets_recursive(inner_f)
 
     def update_preview(self):
@@ -316,8 +266,10 @@ class SourceExtractorTab(BaseTab):
 
         fmt = self.format_var.get()
         ext = 'docx' if fmt == 'Word' else 'txt'
+
+        # [优化] 统一风格的覆盖提示
         if os.path.exists(os.path.join(out_d, f"{fn}.{ext}")):
-            if not messagebox.askyesno("覆盖确认", "文件已存在，是否覆盖？"):
+            if not messagebox.askyesno("覆盖确认", f"目标文件 [{fn}.{ext}] 已存在，是否继续并覆盖？"):
                 return
 
         raw_ext = self.ext_var.get().strip()
@@ -349,6 +301,12 @@ class SourceExtractorTab(BaseTab):
             )
 
             self.parent.after(0, lambda: messagebox.showinfo("成功", f"文件已保存至：\n{final_p}"))
+
+        # [新增] 专门捕获文件被占用的权限错误
+        except PermissionError:
+            err_msg = "导出失败！\n\n目标文件正被其他程序（如 Word 或文本编辑器）占用。\n请先关闭该文件后，再尝试重新提取。"
+            self.parent.after(0, lambda: messagebox.showerror("文件被占用", err_msg))
+
         except (OSError, ValueError, tk.TclError) as e:
             self.parent.after(0, lambda: messagebox.showerror("错误", f"处理失败: {e}"))
         finally:

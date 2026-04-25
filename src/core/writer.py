@@ -60,7 +60,7 @@ def save_output(extracted_data: list, out_folder: str, filename: str, fmt: str,
             doc = Document()
 
         # 注入版权与元数据摘要
-        doc.core_properties.author = "雀码 (QueMa) 工具箱"
+        doc.core_properties.author = "QueMa_Office"
         doc.core_properties.comments = "源码一键提取工具生成"
         doc.core_properties.title = "源码整理交付物"
 
@@ -115,5 +115,36 @@ def save_output(extracted_data: list, out_folder: str, filename: str, fmt: str,
                 f.write(f"文件: {item['filename']}\n{'-' * 50}\n{item['content']}\n\n")
                 if progress_cb:
                     progress_cb(40 + int((i / total) * 55))
+
+    return full_path
+
+
+def save_tree_output(tree_str: str, out_folder: str, filename: str, fmt: str) -> str:
+    """将目录树专供导出为 Word 或 TXT"""
+    os.makedirs(out_folder, exist_ok=True)
+    ext = 'docx' if fmt == 'Word' else 'txt'
+    full_path = os.path.join(out_folder, f"{filename}.{ext}")
+
+    if fmt == "Word":
+        doc = Document()
+        doc.core_properties.author = "QueMa_Office"
+        doc.core_properties.title = "项目目录结构树"
+
+        # 写入标题
+        doc.add_heading("项目目录结构树", level=1)
+
+        # 写入等宽树状图
+        para = doc.add_paragraph()
+        run = para.add_run(tree_str)
+        # 强制使用等宽字体确保分支符号对齐
+        run.font.name = 'Consolas'
+        getattr(run, "_element").rPr.rFonts.set(qn('w:eastAsia'), 'Consolas')
+        run.font.size = Pt(10)
+
+        doc.save(full_path)
+    else:
+        with open(full_path, 'w', encoding='utf-8') as f:
+            f.write(f"【项目目录结构树】\n{'-' * 30}\n")
+            f.write(tree_str)
 
     return full_path
