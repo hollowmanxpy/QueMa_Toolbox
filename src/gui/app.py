@@ -21,7 +21,8 @@ class QueMaToolboxApp:
 
         icon_path = get_resource_path("assets/icons/app_icon.ico")
         if os.path.exists(icon_path):
-            self.root.iconbitmap(icon_path)
+            # 核心修复：必须加上 default=，强制将窗口和任务栏的默认图标全部替换
+            self.root.iconbitmap(default=icon_path)
 
         self.status_var = tk.StringVar(value="准备就绪")
         self.theme_var = tk.StringVar(value="极简白")
