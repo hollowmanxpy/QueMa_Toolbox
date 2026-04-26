@@ -8,6 +8,7 @@ from src.gui.tabs.tab_tree import TreeGeneratorTab
 from src.core.updater import check_for_updates
 from src.utils.theme_utils import QUEMA_THEMES
 from src.utils.path_utils import get_resource_path
+from src.gui.tabs.tab_rename import BatchRenameTab
 
 
 class QueMaToolboxApp:
@@ -104,6 +105,11 @@ class QueMaToolboxApp:
         tab2_frame = tk.Frame(self.notebook)
         self.notebook.add(tab2_frame, text=" 🌲 目录结构树 ")
         self.tabs.append(TreeGeneratorTab(tab2_frame, self.update_status))
+
+        # 选项卡 3：批量重命名 (v2.0 医疗前置)
+        tab3_frame = tk.Frame(self.notebook)
+        self.notebook.add(tab3_frame, text=" 🏷️ 批量重命名 ")
+        self.tabs.append(BatchRenameTab(tab3_frame, self.update_status))
 
     def show_about_dialog(self):
         colors = QUEMA_THEMES.get(self.theme_var.get(), QUEMA_THEMES["极简白"])
