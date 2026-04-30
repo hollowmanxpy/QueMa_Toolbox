@@ -67,7 +67,8 @@ class BatchRenameTab(BaseTab):
         self.dynamic_widgets.append((btn_container, "bg", "panel"))
 
         self.btn_execute = tk.Button(btn_container, text="🚀 确认执行重命名", font=("Microsoft YaHei", 12, "bold"),
-                                     fg="white", cursor="hand2", relief="flat", command=self.run_execute,
+                                     fg="white", disabledforeground="white", cursor="hand2", relief="flat",
+                                     command=self.run_execute,
                                      state="disabled")
         self.btn_execute.pack(ipadx=60, ipady=6)
         self.dynamic_widgets.append((self.btn_execute, "bg", "accent"))
@@ -76,18 +77,23 @@ class BatchRenameTab(BaseTab):
         top_area = tk.Frame(main_f)
         top_area.pack(side="top", fill="x", padx=45, pady=(20, 0))
 
-        tk.Label(top_area, text="一、 目标文件夹与范围", font=("Microsoft YaHei", 11, "bold")).pack(anchor="w",
-                                                                                                   pady=(0, 5))
+        # [优化] 将处理限制参数，优雅地融合在标题行的右侧
+        h1_f = tk.Frame(top_area)
+        h1_f.pack(fill="x", pady=(0, 5))
+        self.dynamic_widgets.append((h1_f, "bg", "panel"))
 
+        tk.Label(h1_f, text="一、 目标文件夹与范围", font=("Microsoft YaHei", 11, "bold")).pack(side="left")
+
+        tk.Label(h1_f, text="处理限制(0为全部):").pack(side="left", padx=(30, 5))
+        e_limit_f, _ = self._create_perfect_entry(h1_f, self.limit_var, width=6)
+        e_limit_f.pack(side="left")
+
+        # [优化] 释放全部横向空间给目录输入框
         r1 = tk.Frame(top_area)
         r1.pack(fill="x", pady=5)
         e1_f, _ = self._create_perfect_entry(r1, self.dir_var)
         e1_f.pack(side="left", fill="x", expand=True, padx=(0, 10))
         self._create_perfect_button(r1, "浏览目录...", lambda: self._select_dir(self.dir_var)).pack(side="left")
-
-        tk.Label(r1, text="处理限制(0为全部):").pack(side="left", padx=(20, 5))
-        e_limit_f, _ = self._create_perfect_entry(r1, self.limit_var, width=5)
-        e_limit_f.pack(side="left")
 
         tk.Label(top_area, text="二、 重命名规则", font=("Microsoft YaHei", 11, "bold")).pack(anchor="w", pady=(15, 5))
 

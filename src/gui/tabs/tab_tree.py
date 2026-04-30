@@ -15,14 +15,17 @@ class TreeGeneratorTab(BaseTab):
         self.out_dir_var = tk.StringVar(value=os.path.join(os.path.expanduser("~"), "Desktop"))
         self.filename_var = tk.StringVar(value="Project_Tree")
         self.format_var = tk.StringVar(value="TXT")
+        self.depth_var = tk.StringVar(value="0")  # [新增] 控制展开深度
+
         self.btn_run = None
         self.preview = None
-
         self._current_full_tree = ""
 
         self.setup_ui()
 
-        self.dir_var.trace_add("write", lambda *_: self.update_preview())
+        # 深度改变也会触发自动预览
+        for v in (self.dir_var, self.depth_var):
+            v.trace_add("write", lambda *_: self.update_preview())
 
     @staticmethod
     def _select_dir(var):
@@ -59,9 +62,11 @@ class TreeGeneratorTab(BaseTab):
         top_area = tk.Frame(main_f)
         top_area.pack(side="top", fill="x", padx=45, pady=(25, 0))
 
+        # === 替换开始 ===
         tk.Label(top_area, text="一、 目录选择与导出设置", font=("Microsoft YaHei", 11, "bold")).pack(anchor="w",
                                                                                                      pady=(0, 10))
 
+        # [优化] 第一行：完全释放空间给项目文件夹
         r1 = tk.Frame(top_area)
         r1.pack(fill="x", pady=5)
         tk.Label(r1, text="项目文件夹:", width=10).pack(side="left")
@@ -76,6 +81,7 @@ class TreeGeneratorTab(BaseTab):
         e2_f.pack(side="left", fill="x", expand=True, padx=5)
         self._create_perfect_button(r2, "浏览...", lambda: self._select_dir(self.out_dir_var)).pack(side="left")
 
+        # [优化] 第三行：将“展开层级”完美融入这行的留白处
         r3 = tk.Frame(top_area)
         r3.pack(fill="x", pady=5)
         tk.Label(r3, text="文件名:", width=10).pack(side="left")
@@ -85,6 +91,12 @@ class TreeGeneratorTab(BaseTab):
         tk.Label(r3, text="格式:").pack(side="left", padx=(15, 5))
         ttk.Combobox(r3, textvariable=self.format_var, values=["TXT", "Word"], state="readonly", width=8).pack(
             side="left", ipady=2)
+
+        # 移动到此处的层级控制
+        tk.Label(r3, text="展开层级(0不限):").pack(side="left", padx=(25, 5))
+        e_depth_f, _ = self._create_perfect_entry(r3, self.depth_var, width=6)
+        e_depth_f.pack(side="left")
+        # === 替换结束 ===
 
         mid_area = tk.Frame(main_f)
         mid_area.pack(side="top", fill="both", expand=True, padx=45, pady=(20, 10))
@@ -139,7 +151,8 @@ class TreeGeneratorTab(BaseTab):
 
     def _preview_worker(self, in_d):
         try:
-            tree_str = generate_ascii_tree(in_d)
+            depth = int(self.depth_var.get()) if self.depth_var.get().isdigit() else 0
+            tree_str = generate_ascii_tree(in_d, max_depth=depth)
             self._current_full_tree = tree_str
 
             lines = tree_str.split('\n')
@@ -168,7 +181,6 @@ class TreeGeneratorTab(BaseTab):
         ext = 'docx' if fmt == 'Word' else 'txt'
         target_file_path = os.path.join(out_d, f"{fn}.{ext}")
 
-        # [优化] 统一风格的覆盖提示
         if os.path.exists(target_file_path):
             if not messagebox.askyesno("覆盖确认", f"目标文件 [{fn}.{ext}] 已存在，是否继续并覆盖？"):
                 return
@@ -179,12 +191,12 @@ class TreeGeneratorTab(BaseTab):
     def _worker(self, in_d, out_d, fn, fmt):
         try:
             self.update_status("正在扫描目录结构...", 30)
-            tree_str = generate_ascii_tree(in_d)
+            depth = int(self.depth_var.get()) if self.depth_var.get().isdigit() else 0
+            tree_str = generate_ascii_tree(in_d, max_depth=depth)
             self.update_status("正在保存...", 80)
             final_p = save_tree_output(tree_str, out_d, fn, fmt)
             self.parent.after(0, lambda: messagebox.showinfo("成功", f"目录树已生成至：\n{final_p}"))
 
-        # [新增] 专门捕获文件被占用的权限错误
         except PermissionError:
             err_msg = "生成失败！\n\n目标文件正被其他程序（如 Word 或文本编辑器）占用。\n请先关闭该文件后，再尝试重新生成。"
             self.parent.after(0, lambda: messagebox.showerror("文件被占用", err_msg))

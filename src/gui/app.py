@@ -5,23 +5,22 @@ from tkinter import ttk
 
 from src.gui.tabs.tab_source import SourceExtractorTab
 from src.gui.tabs.tab_tree import TreeGeneratorTab
-from src.core.updater import check_for_updates
+from src.gui.tabs.tab_rename import BatchRenameTab
+# [导入] 引入全局版本号
+from src.core.updater import check_for_updates, CURRENT_VERSION
 from src.utils.theme_utils import QUEMA_THEMES
 from src.utils.path_utils import get_resource_path
-from src.gui.tabs.tab_rename import BatchRenameTab
 
 
 class QueMaToolboxApp:
     def __init__(self, root):
         self.root = root
-        # 统一名称规范
         self.root.title("QueMa_Office - 办公代码工具")
         self.root.geometry("1000x750")
         self.root.resizable(False, False)
 
         icon_path = get_resource_path("assets/icons/app_icon.ico")
         if os.path.exists(icon_path):
-            # 核心修复：必须加上 default=，强制将窗口和任务栏的默认图标全部替换
             self.root.iconbitmap(default=icon_path)
 
         self.status_var = tk.StringVar(value="准备就绪")
@@ -41,7 +40,6 @@ class QueMaToolboxApp:
         self.setup_ui()
         self.apply_theme()
 
-        # 启动更新检测
         self.root.after(2000, lambda: check_for_updates(self._on_update_checked))
 
     def _on_update_checked(self, has_update, version, url):
@@ -54,7 +52,6 @@ class QueMaToolboxApp:
         top_bar.pack(side="top", fill="x", padx=30, pady=15)
         self.dynamic_widgets.append((top_bar, "bg", "bg"))
 
-        # 统一名称规范
         lbl_title = tk.Label(top_bar, text="QueMa_Office - 办公代码工具", font=("Microsoft YaHei", 15, "bold"))
         lbl_title.pack(side="left")
         self.dynamic_widgets.append((lbl_title, "bg", "bg"))
@@ -93,21 +90,17 @@ class QueMaToolboxApp:
         self.progress = ttk.Progressbar(status_bar, orient="horizontal", mode="determinate")
         self.progress.pack(side="right", fill="x", expand=True, padx=(10, 0))
 
-        # Notebook 选项卡容器
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(side="top", fill="both", expand=True, padx=25, pady=(0, 5))
 
-        # 选项卡 1：源码提取
         tab1_frame = tk.Frame(self.notebook)
         self.notebook.add(tab1_frame, text=" 💻 源码提取 ")
         self.tabs.append(SourceExtractorTab(tab1_frame, self.update_status))
 
-        # 选项卡 2：目录树生成
         tab2_frame = tk.Frame(self.notebook)
         self.notebook.add(tab2_frame, text=" 🌲 目录结构树 ")
         self.tabs.append(TreeGeneratorTab(tab2_frame, self.update_status))
 
-        # 选项卡 3：批量重命名 (v2.0 医疗前置)
         tab3_frame = tk.Frame(self.notebook)
         self.notebook.add(tab3_frame, text=" 🏷️ 批量重命名 ")
         self.tabs.append(BatchRenameTab(tab3_frame, self.update_status))
@@ -116,7 +109,6 @@ class QueMaToolboxApp:
         colors = QUEMA_THEMES.get(self.theme_var.get(), QUEMA_THEMES["极简白"])
 
         dlg = tk.Toplevel(self.root)
-        # 修改左上角标题，使其与按钮文案一致
         dlg.title("问题与反馈 / 更新")
         dlg.geometry("520x360")
         dlg.resizable(False, False)
@@ -129,15 +121,14 @@ class QueMaToolboxApp:
         y = self.root.winfo_y() + (self.root.winfo_height() - 360) // 2
         dlg.geometry(f"+{x}+{y}")
 
-        # 统一名称规范
         lbl_title = tk.Label(dlg, text="QueMa_Office - 办公代码工具",
                              font=("Microsoft YaHei", 14, "bold"), bg=colors["panel"], fg=colors["accent"])
         lbl_title.pack(pady=(35, 5))
 
-        lbl_version = tk.Label(dlg, text="当前版本: v1.1.0", font=("Consolas", 10), bg=colors["panel"], fg=colors["sub"])
+        # [修复] 动态读取统一的 CURRENT_VERSION
+        lbl_version = tk.Label(dlg, text=f"当前版本: v{CURRENT_VERSION}", font=("Consolas", 10), bg=colors["panel"], fg=colors["sub"])
         lbl_version.pack(pady=(0, 15))
 
-        # 优化文案，更加精简；直接打包(pack)进顶级容器，彻底去除限制宽度的Frame，防止文字被边缘裁剪
         about_text = (
             "极简、高效的桌面端代码提取与结构梳理方案。\n"
             "底层解耦架构，轻松应对万级文件的大型工程。\n\n"
@@ -146,7 +137,6 @@ class QueMaToolboxApp:
         tk.Label(dlg, text=about_text, font=("Microsoft YaHei", 10), bg=colors["panel"],
                  fg=colors["text"], justify="center").pack(pady=5)
 
-        # 链接矩阵（增加适当间距保持呼吸感）
         link_frame = tk.Frame(dlg, bg=colors["panel"])
         link_frame.pack(pady=15)
 
@@ -158,7 +148,6 @@ class QueMaToolboxApp:
         link_gh.grid(row=1, column=1, sticky="w", pady=8)
         link_gh.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/hollowmanxpy/QueMa_Toolbox"))
 
-        # 动态更新按钮
         if self.latest_url:
             def open_url():
                 webbrowser.open(self.latest_url)
@@ -205,6 +194,5 @@ class QueMaToolboxApp:
             except (tk.TclError, KeyError):
                 continue
 
-        # 批量通知所有选项卡更新主题
         for tab in self.tabs:
             tab.apply_theme(colors)
